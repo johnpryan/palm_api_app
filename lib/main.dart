@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flutter + PaLM App'),
+        title: Text('Flutter + PaLM'),
       ),
       body: Padding(
         padding: EdgeInsets.all(8.0),
@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     padding: EdgeInsets.all(8.0),
                     margin: EdgeInsets.only(bottom: 8),
-                    child: MarkdownBody(data: responses[idx]),
+                    child: MarkdownBody(selectable: true, data: responses[idx]),
                   );
                 },
                 itemCount: responses.length,
@@ -72,48 +72,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: TextField(
                     decoration: InputDecoration(hintText: 'Enter a prompt...'),
                     controller: _textEditingController,
+                    onSubmitted: (String value) {
+                      _makeRequest(context);
+                    },
                   ),
                 ),
                 IconButton(
                   onPressed: () async {
-                    try {
-                      setState(() {
-                        loading = true;
-                      });
-
-                      var response = await _generate();
-                      setState(() {
-                        responses.add(response);
-                      });
-                    } catch (e) {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text('Something went wrong'),
-                            content: SingleChildScrollView(
-                              child: Text('$e'),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('OK'),
-                              )
-                            ],
-                          );
-                        },
-                      );
-                    } finally {
-                      _textEditingController.clear();
-                      setState(() {
-                        loading = false;
-                      });
-                    }
+                    await _makeRequest(context);
                   },
                   icon: Icon(Icons.send),
-                  // child:  Text('Generate'),
                 )
               ],
             ),
@@ -121,6 +89,44 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _makeRequest(BuildContext context) async {
+    try {
+      setState(() {
+        loading = true;
+      });
+
+      var response = await _generate();
+      setState(() {
+        responses.add(response);
+      });
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Something went wrong'),
+            content: SingleChildScrollView(
+              child: Text('$e'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              )
+            ],
+          );
+        },
+      );
+    } finally {
+      _textEditingController.clear();
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   Future<String> _generate() async {
