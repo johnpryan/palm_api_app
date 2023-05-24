@@ -1,16 +1,11 @@
 # palm_api_app
+A Flutter chat app that uses the PaLM + MakerSuite API.
 
-A new Flutter project.
+## Getting started
+Follow the [PaLM + MakerSuite getting started guide](https://developers.generativeai.google/tutorials/setup) to generate an API key.
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Resources
+See these resources for more information about PaLM + Flutter:
+- Documentation - [PaLM API tutorials](https://developers.generativeai.google/tutorials)
+- Codelab - [Create haikus about Google products with the PaLM API and Flutter](https://codelabs.developers.google.com/haiku-generator)

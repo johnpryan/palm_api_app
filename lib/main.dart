@@ -10,7 +10,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 const _apiKey = '';
 
 void main() {
-  runApp(const PalmApiApp());
+  runApp(PalmApiApp());
 }
 
 class PalmApiApp extends StatelessWidget {
@@ -20,7 +20,7 @@ class PalmApiApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(useMaterial3: true),
-      home: const HomeScreen(),
+      home: HomeScreen(),
     );
   }
 }
@@ -41,15 +41,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter + PaLM App'),
+        title: Text('Flutter + PaLM App'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (loading) const LinearProgressIndicator(),
+            if (loading) LinearProgressIndicator(),
             Expanded(
               child: ListView.builder(
                 itemBuilder: (context, idx) {
@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.blueGrey[50],
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    padding: const EdgeInsets.all(8.0),
+                    padding: EdgeInsets.all(8.0),
                     margin: EdgeInsets.only(bottom: 8),
                     child: MarkdownBody(data: responses[idx]),
                   );
@@ -70,8 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: TextField(
-                    decoration:
-                        const InputDecoration(hintText: 'Enter a prompt...'),
+                    decoration: InputDecoration(hintText: 'Enter a prompt...'),
                     controller: _textEditingController,
                   ),
                 ),
@@ -87,7 +86,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         responses.add(response);
                       });
                     } catch (e) {
-                      print('Error: $e');
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text('Something went wrong'),
+                            content: SingleChildScrollView(
+                              child: Text('$e'),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text('OK'),
+                              )
+                            ],
+                          );
+                        },
+                      );
                     } finally {
                       _textEditingController.clear();
                       setState(() {
@@ -95,8 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                     }
                   },
-                  icon: const Icon(Icons.send),
-                  // child: const Text('Generate'),
+                  icon: Icon(Icons.send),
+                  // child:  Text('Generate'),
                 )
               ],
             ),
