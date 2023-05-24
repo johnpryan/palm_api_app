@@ -18,8 +18,9 @@ class PalmApiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: HomeScreen(),
+    return MaterialApp(
+      theme: ThemeData(useMaterial3: true),
+      home: const HomeScreen(),
     );
   }
 }
@@ -41,31 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter + PaLM App'),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              try {
-                setState(() {
-                  loading = true;
-                });
-
-                var response = await _generate();
-                setState(() {
-                  responses.add(response);
-                });
-              } catch(e) {
-                print('Error: $e');
-              } finally {
-                _textEditingController.clear();
-                setState(() {
-                  loading = false;
-                });
-              }
-            },
-            icon: const Icon(Icons.golf_course),
-            // child: const Text('Generate'),
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -77,14 +53,52 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: ListView.builder(
                 itemBuilder: (context, idx) {
-                  return MarkdownBody(data: responses[idx]);
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blueGrey[50],
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.all(8.0),
+                    margin: EdgeInsets.only(bottom: 8),
+                    child: MarkdownBody(data: responses[idx]),
+                  );
                 },
                 itemCount: responses.length,
               ),
             ),
-            TextField(
-              decoration: const InputDecoration(hintText: 'Enter a prompt...'),
-              controller: _textEditingController,
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration:
+                        const InputDecoration(hintText: 'Enter a prompt...'),
+                    controller: _textEditingController,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () async {
+                    try {
+                      setState(() {
+                        loading = true;
+                      });
+
+                      var response = await _generate();
+                      setState(() {
+                        responses.add(response);
+                      });
+                    } catch (e) {
+                      print('Error: $e');
+                    } finally {
+                      _textEditingController.clear();
+                      setState(() {
+                        loading = false;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.send),
+                  // child: const Text('Generate'),
+                )
+              ],
             ),
           ],
         ),
