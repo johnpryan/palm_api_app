@@ -1,6 +1,8 @@
 # palm_api_app
 A Flutter chat app that uses the PaLM + MakerSuite API.
 
+![Screenshot](https://github.com/johnpryan/palm_api_app/blob/main/docs/screenshot.png?raw=true)
+
 ## Getting started
 Follow the [PaLM + MakerSuite getting started guide](https://developers.generativeai.google/tutorials/setup) to generate an API key.
 
