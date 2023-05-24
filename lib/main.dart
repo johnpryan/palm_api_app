@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:palm_api_app/src/api.dart';
 
 void main() {
   runApp(const PalmApiApp());
@@ -67,35 +68,32 @@ class _HomeScreenState extends State<HomeScreen> {
     final url = Uri.parse(
         'https://generativelanguage.googleapis.com/v1beta2/models/chat-bison-001:generateMessage?key=$apiKey');
     final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode({
-      "prompt": {
-        "context": "You are an awesome haiku writer.",
-        "examples": [
-          {
-            "input": {"content": "Write a haiku about Google Photos."},
-            "output": {
-              "content":
-                  "Google Photos, my friend\nA journey of a lifetime\nCaptured in pixels"
-            }
-          }
-        ],
-        "messages": [
-          {"content": "Write a cool, long haiku of for $productName"}
-        ]
-      },
-      "candidate_count": haikuCount,
-      "temperature": 1,
-    });
+    final body = jsonEncode(
+      Request(
+        Prompt(
+          'You are a haiku writer',
+          examples: [
+            Example(
+              PromptData('Write a haiku about Elephants'),
+              PromptData(
+                  'Elephants, mighty\nThey roam the savannah\nAcross the plains'),
+            )
+          ],
+          messages: [
+            PromptData('Write a cool, long haiku for $productName'),
+          ],
+        ),
+        candidateCount: 3,
+      ),
+    );
 
     try {
       final response = await http.post(url, headers: headers, body: body);
       if (response.statusCode == 200) {
-        print(response.body);
-        final decodedResponse = json.decode(response.body);
-        String haikus = 'Here are $haikuCount haikus about $productName:\n\n';
-        for (var i = 0; i < haikuCount; i++) {
-          haikus += '${i + 1}.\n';
-          haikus += decodedResponse['candidates'][i]['content'] + '\n\n';
+        final decodedResponse = Response.fromJson(json.decode(response.body));
+        var haikus = 'Here are ${decodedResponse.candidates.length} haikus:\n\n';
+        for (var i = 0; i < decodedResponse.candidates.length; i++) {
+          haikus += '${decodedResponse.candidates[i].content}\n\n';
         }
         return haikus;
       } else {
