@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:palm_api_app/api.dart';
 import 'package:palm_api_app/src/api.dart';
 
 void main() {
@@ -63,44 +64,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<String> _generate() async {
     var productName = _textEditingController.text;
-    var haikuCount = 3;
-    var apiKey = '';
-    final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta2/models/chat-bison-001:generateMessage?key=$apiKey');
-    final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode(
-      Request(
-        Prompt(
-          'You are a haiku writer',
-          examples: [
-            Example(
-              PromptData('Write a haiku about Elephants'),
-              PromptData(
-                  'Elephants, mighty\nThey roam the savannah\nAcross the plains'),
-            )
-          ],
-          messages: [
-            PromptData('Write a cool, long haiku for $productName'),
-          ],
-        ),
-        candidateCount: 3,
+    final api = GenerativeLanguageApi('');
+    final result = await api.generate(Request(
+      Prompt(
+        'You are a haiku writer',
+        examples: [
+          Example(
+            PromptData('Write a haiku about Elephants'),
+            PromptData(
+                'Elephants, mighty\nThey roam the savannah\nAcross the plains'),
+          )
+        ],
+        messages: [
+          PromptData('Write a cool, long haiku for $productName'),
+        ],
       ),
-    );
+      candidateCount: 3,
+    ));
 
-    try {
-      final response = await http.post(url, headers: headers, body: body);
-      if (response.statusCode == 200) {
-        final decodedResponse = Response.fromJson(json.decode(response.body));
-        var haikus = 'Here are ${decodedResponse.candidates.length} haikus:\n\n';
-        for (var i = 0; i < decodedResponse.candidates.length; i++) {
-          haikus += '${decodedResponse.candidates[i].content}\n\n';
-        }
-        return haikus;
-      } else {
-        return 'Request failed with status: ${response.statusCode}.\n\n${response.body}';
-      }
-    } catch (error) {
-      throw Exception('Error sending POST request: $error');
+    var haikus = 'Here are ${result.candidates.length} haikus:\n\n';
+    for (var i = 0; i < result.candidates.length; i++) {
+      haikus += '${result.candidates[i].content}\n\n';
     }
+
+    return haikus;
   }
 }
