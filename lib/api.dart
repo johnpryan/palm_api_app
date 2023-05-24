@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'src/api.dart';
+export 'src/api.dart';
 
 class GenerativeLanguageApi {
   final String apiKey;

@@ -45,7 +45,7 @@ Map<String, dynamic> _$ResponseMessageToJson(ResponseMessage instance) =>
     };
 
 Prompt _$PromptFromJson(Map<String, dynamic> json) => Prompt(
-      json['context'] as String,
+      context: json['context'] as String?,
       messages: (json['messages'] as List<dynamic>?)
               ?.map((e) => PromptData.fromJson(e as Map<String, dynamic>))
               .toList() ??

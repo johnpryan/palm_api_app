@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:palm_api_app/api.dart';
-import 'package:palm_api_app/src/api.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+
+// Add your PaLM MakerSuite API here:
+const _apiKey = '';
 
 void main() {
   runApp(const PalmApiApp());
@@ -29,33 +31,59 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _textEditingController = TextEditingController();
-  String? result;
+  List<String> responses = [];
+  bool loading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Flutter + PaLM App'),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              try {
+                setState(() {
+                  loading = true;
+                });
+
+                var response = await _generate();
+                setState(() {
+                  responses.add(response);
+                });
+              } catch(e) {
+                print('Error: $e');
+              } finally {
+                _textEditingController.clear();
+                setState(() {
+                  loading = false;
+                });
+              }
+            },
+            icon: const Icon(Icons.golf_course),
+            // child: const Text('Generate'),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (loading) const LinearProgressIndicator(),
+            Expanded(
+              child: ListView.builder(
+                itemBuilder: (context, idx) {
+                  return MarkdownBody(data: responses[idx]);
+                },
+                itemCount: responses.length,
+              ),
+            ),
             TextField(
               decoration: const InputDecoration(hintText: 'Enter a prompt...'),
               controller: _textEditingController,
             ),
-            Center(
-              child: TextButton(
-                onPressed: () async {
-                  var haikus = await _generate();
-                  setState(() {
-                    result = haikus;
-                  });
-                },
-                child: const Text('Generate'),
-              ),
-            ),
-            if (result != null) Text(result!),
           ],
         ),
       ),
@@ -63,30 +91,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<String> _generate() async {
-    var productName = _textEditingController.text;
-    final api = GenerativeLanguageApi('');
+    var prompt = _textEditingController.text;
+    final api = GenerativeLanguageApi(_apiKey);
     final result = await api.generate(Request(
       Prompt(
-        'You are a haiku writer',
-        examples: [
-          Example(
-            PromptData('Write a haiku about Elephants'),
-            PromptData(
-                'Elephants, mighty\nThey roam the savannah\nAcross the plains'),
-          )
-        ],
         messages: [
-          PromptData('Write a cool, long haiku for $productName'),
+          PromptData(prompt),
         ],
       ),
-      candidateCount: 3,
+      candidateCount: 1,
     ));
 
-    var haikus = 'Here are ${result.candidates.length} haikus:\n\n';
+    var buf = StringBuffer();
     for (var i = 0; i < result.candidates.length; i++) {
-      haikus += '${result.candidates[i].content}\n\n';
+      buf.writeln(result.candidates[i].content);
+      buf.writeln('');
     }
 
-    return haikus;
+    return buf.toString();
   }
 }

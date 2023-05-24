@@ -45,11 +45,11 @@ class ResponseMessage {
 
 @JsonSerializable()
 class Prompt {
-  String context;
+  String? context;
   List<Example> examples;
   List<PromptData> messages;
 
-  Prompt(this.context, {this.messages = const [], this.examples = const []});
+  Prompt({this.context, this.messages = const [], this.examples = const []});
 
   factory Prompt.fromJson(Map<String, dynamic> json) => _$PromptFromJson(json);
   Map<String, dynamic> toJson() => _$PromptToJson(this);
