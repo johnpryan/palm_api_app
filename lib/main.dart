@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:palm_api_app/api.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:palm_api_app/api.dart';
 
 // Add your PaLM MakerSuite API here:
 const _apiKey = '';
@@ -34,8 +34,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _textEditingController = TextEditingController();
-  List<String> responses = [];
+  List<ChatMessage> responses = [];
   bool loading = false;
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,15 +59,43 @@ class _HomeScreenState extends State<HomeScreen> {
             if (loading) LinearProgressIndicator(),
             Expanded(
               child: ListView.builder(
+                controller: _scrollController,
                 itemBuilder: (context, idx) {
+                  final chatMessage = responses[idx];
+                  // if (chatMessage.error != null) {
+                  //   return TextButton(
+                  //       onPressed: () {
+                  //         responses.removeLast();
+                  //         setState(() {});
+                  //         _makeRequest(context, text: chatMessage.text);
+                  //       },
+                  //       child: Text(
+                  //         "Failed to make request! Tap to retry.",
+                  //         style: TextStyle(color: Colors.red),
+                  //       ));
+                  // }
+
                   return Container(
                     decoration: BoxDecoration(
-                      color: Colors.blueGrey[50],
+                      color: chatMessage.isPrompt!
+                          ? Colors.cyan[50]
+                          : Colors.blueGrey[50],
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     padding: EdgeInsets.all(8.0),
                     margin: EdgeInsets.only(bottom: 8),
-                    child: MarkdownBody(selectable: true, data: responses[idx]),
+                    child: MarkdownBody(
+                        styleSheetTheme: MarkdownStyleSheetBaseTheme.material,
+                        styleSheet: MarkdownStyleSheet(
+                          // body color
+                          blockquoteDecoration: BoxDecoration(
+                            color: chatMessage.isPrompt!
+                                ? Colors.cyan[50]
+                                : Colors.blueGrey[50],
+                          ),
+                        ),
+                        selectable: true,
+                        data: responses[idx].text),
                   );
                 },
                 itemCount: responses.length,
@@ -70,8 +105,12 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: TextField(
+                    maxLines: 16,
+                    minLines: 1,
+                    textInputAction: TextInputAction.send,
                     decoration: InputDecoration(hintText: 'Enter a prompt...'),
                     controller: _textEditingController,
+                    // keyboardType: TextInputType.multiline,
                     onSubmitted: (String value) {
                       _makeRequest(context);
                     },
@@ -91,28 +130,49 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _makeRequest(BuildContext context) async {
+  void scrollToBottom() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  Future<void> _makeRequest(BuildContext context, {String? text}) async {
     try {
+      String? prompt;
+      if (text == null) {
+        prompt = _textEditingController.text;
+      } else {
+        prompt = text;
+      }
+      if (prompt.isEmpty) {
+        return;
+      }
+      responses.add(ChatMessage(text: prompt, isPrompt: true));
+      _textEditingController.clear();
       setState(() {
         loading = true;
       });
-
-      var response = await _generate();
+      var response = await _generate(prompt);
       setState(() {
         responses.add(response);
       });
-    } catch (e) {
+      scrollToBottom();
+    } catch (_) {
+      // responses.add(_);
       showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
             title: Text('Something went wrong'),
             content: SingleChildScrollView(
-              child: Text('$e'),
+              child: Text('$_'),
             ),
             actions: [
               TextButton(
                 onPressed: () {
+                  scrollToBottom();
                   Navigator.of(context).pop();
                 },
                 child: Text('OK'),
@@ -129,24 +189,43 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<String> _generate() async {
-    var prompt = _textEditingController.text;
-    final api = GenerativeLanguageApi(_apiKey);
-    final result = await api.generate(Request(
-      Prompt(
-        messages: [
-          PromptData(prompt),
-        ],
-      ),
-      candidateCount: 1,
-    ));
+  Future<ChatMessage> _generate(String prompt) async {
+    try {
+      final api = GenerativeLanguageApi(_apiKey);
+      final result = await api.generate(Request(
+        Prompt(
+          messages: [
+            PromptData(prompt),
+          ],
+        ),
+        candidateCount: 1,
+      ));
 
-    var buf = StringBuffer();
-    for (var i = 0; i < result.candidates.length; i++) {
-      buf.writeln(result.candidates[i].content);
-      buf.writeln('');
+      var buf = StringBuffer();
+      for (var i = 0; i < result.candidates.length; i++) {
+        buf.writeln(result.candidates[i].content);
+        buf.writeln('');
+      }
+
+      return ChatMessage.fromResponse(buf.toString());
+    } catch (e) {
+      print("Error: $e");
+      rethrow;
+      // throw ChatMessage(text: prompt, error: e, isPrompt: true);
     }
-
-    return buf.toString();
   }
+}
+
+class ChatMessage {
+  final String text;
+
+  /// defaults to false
+  /// if true, the message represents a prompt
+  final bool? isPrompt;
+
+  ChatMessage({required this.text, this.isPrompt = false});
+
+  ChatMessage.fromResponse(String response)
+      : text = response,
+        isPrompt = false;
 }
