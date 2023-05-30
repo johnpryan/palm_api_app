@@ -62,18 +62,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 controller: _scrollController,
                 itemBuilder: (context, idx) {
                   final chatMessage = responses[idx];
-                  // if (chatMessage.error != null) {
-                  //   return TextButton(
-                  //       onPressed: () {
-                  //         responses.removeLast();
-                  //         setState(() {});
-                  //         _makeRequest(context, text: chatMessage.text);
-                  //       },
-                  //       child: Text(
-                  //         "Failed to make request! Tap to retry.",
-                  //         style: TextStyle(color: Colors.red),
-                  //       ));
-                  // }
+                  if (chatMessage.error != null) {
+                    return TextButton(
+                        onPressed: () {
+                          responses.removeLast();
+                          setState(() {});
+                          _makeRequest(context, text: chatMessage.text);
+                        },
+                        child: Text(
+                          "Failed to make request! Tap to retry.",
+                          style: TextStyle(color: Colors.red),
+                        ));
+                  }
 
                   return Container(
                     decoration: BoxDecoration(
@@ -110,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     textInputAction: TextInputAction.send,
                     decoration: InputDecoration(hintText: 'Enter a prompt...'),
                     controller: _textEditingController,
-                    // keyboardType: TextInputType.multiline,
+                    keyboardType: TextInputType.multiline,
                     onSubmitted: (String value) {
                       _makeRequest(context);
                     },
@@ -151,6 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       responses.add(ChatMessage(text: prompt, isPrompt: true));
       _textEditingController.clear();
+      scrollToBottom();
       setState(() {
         loading = true;
       });
@@ -159,15 +160,15 @@ class _HomeScreenState extends State<HomeScreen> {
         responses.add(response);
       });
       scrollToBottom();
-    } catch (_) {
-      // responses.add(_);
+    } on ChatMessage catch (_) {
+      responses.add(_);
       showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
             title: Text('Something went wrong'),
             content: SingleChildScrollView(
-              child: Text('$_'),
+              child: Text('${_.error}'),
             ),
             actions: [
               TextButton(
@@ -209,9 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return ChatMessage.fromResponse(buf.toString());
     } catch (e) {
-      print("Error: $e");
-      rethrow;
-      // throw ChatMessage(text: prompt, error: e, isPrompt: true);
+      throw ChatMessage(text: prompt, error: e, isPrompt: true);
     }
   }
 }
@@ -222,10 +221,12 @@ class ChatMessage {
   /// defaults to false
   /// if true, the message represents a prompt
   final bool? isPrompt;
+  final Object? error;
 
-  ChatMessage({required this.text, this.isPrompt = false});
+  ChatMessage({required this.text, this.isPrompt = false, this.error});
 
   ChatMessage.fromResponse(String response)
       : text = response,
+        error = null,
         isPrompt = false;
 }
