@@ -130,8 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void scrollToBottom() {
-    _scrollController.animateTo(
+  Future<void> scrollToBottom() async {
+    await _scrollController.animateTo(
       _scrollController.position.maxScrollExtent,
       duration: Duration(milliseconds: 300),
       curve: Curves.easeOut,
@@ -151,7 +151,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       responses.add(ChatMessage(text: prompt, isPrompt: true));
       _textEditingController.clear();
-      scrollToBottom();
       setState(() {
         loading = true;
       });
