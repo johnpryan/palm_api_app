@@ -1,3 +1,5 @@
+**Note:** This sample is out of date. Go to https://github.com/google/generative-ai-dart to find the latest sample code for Google's generative language API.
+
 # palm_api_app
 A Flutter chat app that uses the PaLM + MakerSuite API.
 
